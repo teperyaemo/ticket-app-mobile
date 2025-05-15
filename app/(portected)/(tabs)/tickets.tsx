@@ -1,144 +1,183 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { Collapsible } from "@/components/Collapsible";
-import { ExternalLink } from "@/components/ExternalLink";
+import { AuthContext } from "@/components/AuthProvider";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Image } from "expo-image";
+import { useContext, useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+} from "react-native";
 
-export default function TabTwoScreen() {
+interface Ticket {
+    id: string;
+    concertId: string;
+    concert: {
+        id: string;
+        name: string;
+        startedAt: string;
+        ticketPrice: number;
+    };
+}
+
+export default function TicketsScreen() {
+    const { token } = useContext(AuthContext);
+    const [tickets, setTickets] = useState<Ticket[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchTickets = async () => {
+        try {
+            const response = await fetch(
+                "https://teperyaemo.ru/api/Ticket?page=1&take=25",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) throw new Error("Ошибка загрузки билетов");
+
+            const data = await response.json();
+            setTickets(data);
+        } catch (err) {
+            console.error("Ошибка при загрузке билетов:", err);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    // Загружаем билеты при монтировании
+    useEffect(() => {
+        fetchTickets();
+    }, []);
+
+    // Функция для ручного обновления
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchTickets();
+    };
+
+    const renderTicket = ({ item }: { item: Ticket }) => (
+        <ThemedView style={styles.ticketContainer}>
+            <ThemedText type="title" style={styles.concertName}>
+                {item.concert.name}
+            </ThemedText>
+
+            <ThemedView style={styles.detailRow}>
+                <ThemedText style={styles.detailLabel}>
+                    Дата концерта:
+                </ThemedText>
+                <ThemedText style={styles.detailValue}>
+                    {new Date(item.concert.startedAt).toLocaleString()}
+                </ThemedText>
+            </ThemedView>
+
+            <ThemedView style={styles.detailRow}>
+                <ThemedText style={styles.detailLabel}>Цена билета:</ThemedText>
+                <ThemedText style={styles.detailValue}>
+                    {item.concert.ticketPrice} ₽
+                </ThemedText>
+            </ThemedView>
+        </ThemedView>
+    );
+
     return (
         <ParallaxScrollView
-            headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+            headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
             headerImage={
-                <IconSymbol
-                    size={310}
-                    color="#808080"
-                    name="chevron.left.forwardslash.chevron.right"
-                    style={styles.headerImage}
+                <Image
+                    source={require("@/assets/images/partial-react-logo.png")}
+                    style={styles.reactLogo}
                 />
             }
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
         >
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Explore</ThemedText>
+            <ThemedView style={styles.container}>
+                <ThemedText type="title" style={styles.title}>
+                    Мои билеты
+                </ThemedText>
+
+                {loading && !refreshing ? (
+                    <ActivityIndicator size="large" style={styles.loader} />
+                ) : tickets.length === 0 ? (
+                    <ThemedText style={styles.noTickets}>
+                        У вас пока нет купленных билетов
+                    </ThemedText>
+                ) : (
+                    <FlatList
+                        data={tickets}
+                        renderItem={renderTicket}
+                        keyExtractor={(item) => item.id}
+                        scrollEnabled={false}
+                        contentContainerStyle={styles.listContent}
+                    />
+                )}
             </ThemedView>
-            <ThemedText>
-                This app includes example code to help you get started.
-            </ThemedText>
-            <Collapsible title="File-based routing">
-                <ThemedText>
-                    This app has two screens:{" "}
-                    <ThemedText type="defaultSemiBold">
-                        app/(tabs)/index.tsx
-                    </ThemedText>{" "}
-                    and{" "}
-                    <ThemedText type="defaultSemiBold">
-                        app/(tabs)/explore.tsx
-                    </ThemedText>
-                </ThemedText>
-                <ThemedText>
-                    The layout file in{" "}
-                    <ThemedText type="defaultSemiBold">
-                        app/(tabs)/_layout.tsx
-                    </ThemedText>{" "}
-                    sets up the tab navigator.
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/router/introduction">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Android, iOS, and web support">
-                <ThemedText>
-                    You can open this project on Android, iOS, and the web. To
-                    open the web version, press{" "}
-                    <ThemedText type="defaultSemiBold">w</ThemedText> in the
-                    terminal running this project.
-                </ThemedText>
-            </Collapsible>
-            <Collapsible title="Images">
-                <ThemedText>
-                    For static images, you can use the{" "}
-                    <ThemedText type="defaultSemiBold">@2x</ThemedText> and{" "}
-                    <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes
-                    to provide files for different screen densities
-                </ThemedText>
-                <Image
-                    source={require("@/assets/images/react-logo.png")}
-                    style={{ alignSelf: "center" }}
-                />
-                <ExternalLink href="https://reactnative.dev/docs/images">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Custom fonts">
-                <ThemedText>
-                    Open{" "}
-                    <ThemedText type="defaultSemiBold">
-                        app/_layout.tsx
-                    </ThemedText>{" "}
-                    to see how to load{" "}
-                    <ThemedText style={{ fontFamily: "SpaceMono" }}>
-                        custom fonts such as this one.
-                    </ThemedText>
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Light and dark mode components">
-                <ThemedText>
-                    This template has light and dark mode support. The{" "}
-                    <ThemedText type="defaultSemiBold">
-                        useColorScheme()
-                    </ThemedText>{" "}
-                    hook lets you inspect what the user&apos;s current color
-                    scheme is, and so you can adjust UI colors accordingly.
-                </ThemedText>
-                <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-                    <ThemedText type="link">Learn more</ThemedText>
-                </ExternalLink>
-            </Collapsible>
-            <Collapsible title="Animations">
-                <ThemedText>
-                    This template includes an example of an animated component.
-                    The{" "}
-                    <ThemedText type="defaultSemiBold">
-                        components/HelloWave.tsx
-                    </ThemedText>{" "}
-                    component uses the powerful{" "}
-                    <ThemedText type="defaultSemiBold">
-                        react-native-reanimated
-                    </ThemedText>{" "}
-                    library to create a waving hand animation.
-                </ThemedText>
-                {Platform.select({
-                    ios: (
-                        <ThemedText>
-                            The{" "}
-                            <ThemedText type="defaultSemiBold">
-                                components/ParallaxScrollView.tsx
-                            </ThemedText>{" "}
-                            component provides a parallax effect for the header
-                            image.
-                        </ThemedText>
-                    ),
-                })}
-            </Collapsible>
         </ParallaxScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    headerImage: {
-        color: "#808080",
-        bottom: -90,
-        left: -35,
+    container: {
+        flex: 1,
+        padding: 16,
+    },
+    reactLogo: {
+        height: 250,
+        width: 412,
+        bottom: 0,
+        left: 0,
         position: "absolute",
     },
-    titleContainer: {
+    title: {
+        marginBottom: 20,
+        textAlign: "center",
+    },
+    ticketContainer: {
+        padding: 8,
+        borderRadius: 8,
+        marginBottom: 16,
+        backgroundColor: "#f5f5f5",
+    },
+    concertName: {
+        fontSize: 18,
+        marginBottom: 12,
+        textAlign: "center",
+    },
+    detailRow: {
         flexDirection: "row",
-        gap: 8,
+        justifyContent: "space-between",
+        marginBottom: 8,
+    },
+    detailLabel: {
+        fontWeight: "bold",
+        color: "#555",
+    },
+    detailValue: {
+        color: "#333",
+    },
+    loader: {
+        marginVertical: 20,
+    },
+    noTickets: {
+        textAlign: "center",
+        marginTop: 20,
+        fontSize: 16,
+        color: "#666",
+    },
+    listContent: {
+        paddingBottom: 20,
+    },
+    refreshText: {
+        textAlign: "center",
+        color: "#666",
+        marginTop: 10,
     },
 });

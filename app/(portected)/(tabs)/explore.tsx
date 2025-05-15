@@ -226,8 +226,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#f5f5f5",
     },
     reactLogo: {
-        height: 178,
-        width: 290,
+        height: 250,
+        width: 412,
         bottom: 0,
         left: 0,
         position: "absolute",
