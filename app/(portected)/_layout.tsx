@@ -1,6 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import { useContext } from "react";
-import { AuthContext } from "../components/AuthProvider";
+import { AuthContext } from "../../components/AuthProvider";
 
 export default function ProtectedLayout() {
     const { token, isReady } = useContext(AuthContext);

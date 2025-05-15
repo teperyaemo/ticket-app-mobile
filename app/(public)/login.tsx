@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useContext, useState } from "react";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
-import { AuthContext } from "../components/AuthProvider";
+import { AuthContext } from "../../components/AuthProvider";
 
 export default function LoginScreen() {
     const [username, setUsername] = useState("");
