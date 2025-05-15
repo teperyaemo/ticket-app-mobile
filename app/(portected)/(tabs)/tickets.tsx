@@ -51,12 +51,13 @@ export default function TicketsScreen() {
         }
     };
 
-    // Загружаем билеты при монтировании
     useEffect(() => {
+        // Сбрасываем состояние при смене токена
+        setTickets([]);
+        setLoading(true);
         fetchTickets();
-    }, []);
+    }, [token]);
 
-    // Функция для ручного обновления
     const onRefresh = () => {
         setRefreshing(true);
         fetchTickets();

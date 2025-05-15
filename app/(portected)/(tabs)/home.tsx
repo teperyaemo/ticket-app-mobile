@@ -14,7 +14,9 @@ import {
 
 interface Post {
     id: string;
+    title: string;
     text: string;
+    image: string; // base64
     createdAt: string;
     userId: string;
 }
@@ -59,12 +61,22 @@ export default function HomeScreen() {
         if (token) fetchPosts();
     }, [token]);
 
-    const renderItem = ({ item }: { item: Post }) => (
+    const renderPost = ({ item }: { item: Post }) => (
         <ThemedView style={styles.postContainer}>
-            <ThemedText style={styles.postDate}>
-                {new Date(item.createdAt).toLocaleString()}
+            {item.image && (
+                <Image
+                    source={{ uri: `data:image/png;base64,${item.image}` }}
+                    style={styles.postImage}
+                    contentFit="cover"
+                />
+            )}
+            <ThemedText type="title" style={styles.postTitle}>
+                {item.title}
             </ThemedText>
             <ThemedText style={styles.postText}>{item.text}</ThemedText>
+            <ThemedText style={styles.postDate}>
+                {new Date(item.createdAt).toLocaleDateString()}
+            </ThemedText>
         </ThemedView>
     );
 
@@ -102,7 +114,7 @@ export default function HomeScreen() {
             ) : (
                 <FlatList
                     data={posts}
-                    renderItem={renderItem}
+                    renderItem={renderPost}
                     keyExtractor={(item) => item.id}
                     scrollEnabled={false}
                     contentContainerStyle={styles.listContent}
@@ -120,19 +132,37 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     postContainer: {
+        borderRadius: 12,
+        overflow: "hidden",
+        marginBottom: 20,
+        backgroundColor: "#fff",
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    postImage: {
+        width: "100%",
+        height: 200,
+    },
+    postTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
         padding: 16,
-        borderRadius: 8,
-        marginBottom: 12,
-        backgroundColor: "#f5f5f5",
+        paddingBottom: 8,
+    },
+    postText: {
+        fontSize: 14,
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+        color: "#555",
     },
     postDate: {
         fontSize: 12,
-        color: "#666",
-        marginTop: 4,
-    },
-    postText: {
-        marginTop: 8,
-        lineHeight: 20,
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+        color: "#888",
     },
     loader: {
         marginVertical: 20,

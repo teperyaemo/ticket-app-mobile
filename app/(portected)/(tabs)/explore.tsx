@@ -1,9 +1,10 @@
 import { AuthContext } from "@/components/AuthProvider";
+import { ConcertItem } from "@/components/ConcertItem";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -16,10 +17,17 @@ import {
 interface Concert {
     id: string;
     name: string;
+    image: string; // base64
     startedAt: string;
-    availableTicketAmount: number;
     ticketPrice: number;
-    createdAt: string;
+    availableTicketAmount: number;
+    isFavorite?: boolean;
+}
+
+interface Favorite {
+    id: string;
+    concertId: string;
+    concert: Concert;
 }
 
 export default function TabTwoScreen() {
@@ -29,40 +37,64 @@ export default function TabTwoScreen() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
 
-    useEffect(() => {
-        if (searchQuery.trim() === "") {
-            fetchConcerts();
-        }
-    }, [searchQuery]);
-
-    const fetchConcerts = async () => {
+    const loadConcertsWithFavorites = async () => {
         setLoading(true);
         try {
-            const response = await fetch(
-                "https://teperyaemo.ru/api/Concert/paged?page=1&take=25",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+            // Параллельная загрузка концертов и избранного
+            const [concertsResponse, favoritesResponse] = await Promise.all([
+                fetch(
+                    "https://teperyaemo.ru/api/Concert/paged?page=1&take=25",
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                ),
+                fetch("https://teperyaemo.ru/api/Favorite", {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ]);
+
+            if (!concertsResponse.ok)
+                throw new Error("Ошибка загрузки концертов");
+            if (!favoritesResponse.ok)
+                throw new Error("Ошибка загрузки избранного");
+
+            const [concertsData, favoritesData] = await Promise.all([
+                concertsResponse.json(),
+                favoritesResponse.json(),
+            ]);
+
+            const concertsArray = concertsData?.items || concertsData || [];
+            const favoritesArray = favoritesData || [];
+
+            const favoriteIds = favoritesArray.map(
+                (fav: Favorite) => fav.concertId
             );
 
-            if (!response.ok) throw new Error("Ошибка загрузки концертов");
-
-            const data = await response.json();
-            setConcerts(data.items || data);
+            setConcerts(
+                concertsArray.map((concert: Concert) => ({
+                    ...concert,
+                    isFavorite: favoriteIds.includes(concert.id),
+                }))
+            );
         } catch (err) {
-            Alert.alert("Ошибка", "Не удалось загрузить концерты");
-            console.error(err);
+            console.error("Ошибка загрузки:", err);
+            Alert.alert("Не удалось загрузить данные");
+            setConcerts([]);
         } finally {
             setLoading(false);
-            setIsSearching(false);
         }
     };
 
+    // В useEffect используем новую функцию:
+    useEffect(() => {
+        if (token) {
+            loadConcertsWithFavorites();
+        }
+    }, [token]);
+
     const searchConcerts = async () => {
         if (searchQuery.trim() === "") {
-            fetchConcerts();
+            loadConcertsWithFavorites();
             return;
         }
 
@@ -108,7 +140,7 @@ export default function TabTwoScreen() {
 
             Alert.alert("Успех", "Билет успешно приобретен!");
             // Обновляем список концертов после покупки
-            fetchConcerts();
+            loadConcertsWithFavorites();
         } catch (err) {
             Alert.alert("Ошибка", "Не удалось купить билет");
             console.error(err);
@@ -116,32 +148,18 @@ export default function TabTwoScreen() {
     };
 
     const renderConcert = ({ item }: { item: Concert }) => (
-        <ThemedView style={styles.concertContainer}>
-            <ThemedText type="defaultSemiBold" style={styles.concertName}>
-                {item.name}
-            </ThemedText>
-            <ThemedText style={styles.concertDetail}>
-                Дата: {new Date(item.startedAt).toLocaleString()}
-            </ThemedText>
-            <ThemedText style={styles.concertDetail}>
-                Цена: {item.ticketPrice} ₽
-            </ThemedText>
-            <ThemedText style={styles.concertDetail}>
-                Доступно билетов: {item.availableTicketAmount}
-            </ThemedText>
-
-            <TouchableOpacity
-                style={styles.buyButton}
-                onPress={() => buyTicket(item.id)}
-                disabled={item.availableTicketAmount <= 0}
-            >
-                <ThemedText style={styles.buyButtonText}>
-                    {item.availableTicketAmount > 0
-                        ? "Купить билет"
-                        : "Билетов нет"}
-                </ThemedText>
-            </TouchableOpacity>
-        </ThemedView>
+        <ConcertItem
+            item={item}
+            token={token}
+            onBuyTicket={buyTicket}
+            onFavoriteToggle={(concertId, newStatus) => {
+                setConcerts((prev) =>
+                    prev.map((c) =>
+                        c.id === concertId ? { ...c, isFavorite: newStatus } : c
+                    )
+                );
+            }}
+        />
     );
 
     return (
@@ -219,41 +237,12 @@ const styles = StyleSheet.create({
         backgroundColor: "#ddd",
         borderRadius: 5,
     },
-    concertContainer: {
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 15,
-        backgroundColor: "#f5f5f5",
-    },
     reactLogo: {
         height: 250,
         width: 412,
         bottom: 0,
         left: 0,
         position: "absolute",
-    },
-    concertName: {
-        fontSize: 18,
-        marginBottom: 8,
-    },
-    concertDetail: {
-        fontSize: 14,
-        marginBottom: 4,
-        color: "#555",
-    },
-    buyButton: {
-        marginTop: 10,
-        padding: 10,
-        borderRadius: 5,
-        alignItems: "center",
-        backgroundColor: "#4CAF50",
-    },
-    buyButtonDisabled: {
-        backgroundColor: "#cccccc",
-    },
-    buyButtonText: {
-        color: "white",
-        fontWeight: "bold",
     },
     loader: {
         marginVertical: 20,
