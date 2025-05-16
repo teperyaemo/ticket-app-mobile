@@ -37,11 +37,8 @@ export default function HomeScreen() {
                 if (!response.ok)
                     throw new Error(`HTTP error! status: ${response.status}`);
 
-                // Правильно читаем JSON из ответа
                 const responseData = await response.json();
-                console.log("Полученные данные:", responseData); // Для отладки
 
-                // Проверяем разные варианты структуры ответа
                 const postsData =
                     responseData.items || responseData.data || responseData;
                 setPosts(Array.isArray(postsData) ? postsData : [postsData]);
