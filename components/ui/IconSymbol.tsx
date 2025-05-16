@@ -25,6 +25,10 @@ const MAPPING = {
     "ticket.fill": "ticket",
     magnifyingglass: "magnify",
     "lock.fill": "lock",
+    "heart.fill": "heart",
+    "person.fill": "account",
+    calendar: "calendar",
+    "music.note": "music-note",
 } as IconMapping;
 
 /**

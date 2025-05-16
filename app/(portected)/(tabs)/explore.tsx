@@ -3,6 +3,7 @@ import { ConcertItem } from "@/components/ConcertItem";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Image } from "expo-image";
 import React, { useContext, useEffect, useState } from "react";
 import {
@@ -85,7 +86,6 @@ export default function TabTwoScreen() {
         }
     };
 
-    // В useEffect используем новую функцию:
     useEffect(() => {
         if (token) {
             loadConcertsWithFavorites();
@@ -139,7 +139,6 @@ export default function TabTwoScreen() {
             if (!response.ok) throw new Error("Ошибка покупки билета");
 
             Alert.alert("Успех", "Билет успешно приобретен!");
-            // Обновляем список концертов после покупки
             loadConcertsWithFavorites();
         } catch (err) {
             Alert.alert("Ошибка", "Не удалось купить билет");
@@ -186,7 +185,11 @@ export default function TabTwoScreen() {
                         onPress={searchConcerts}
                         disabled={loading}
                     >
-                        <ThemedText>Поиск</ThemedText>
+                        <IconSymbol
+                            name="magnifyingglass"
+                            size={18}
+                            color={""}
+                        />
                     </TouchableOpacity>
                 </ThemedView>
 

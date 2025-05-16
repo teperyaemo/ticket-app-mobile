@@ -5,12 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
 import { useContext, useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    TouchableOpacity,
-} from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 
 interface Post {
     id: string;
@@ -94,12 +89,6 @@ export default function HomeScreen() {
                 <ThemedText type="title">Последние посты</ThemedText>
                 <HelloWave />
             </ThemedView>
-
-            <TouchableOpacity onPress={logOut} style={styles.logoutButton}>
-                <ThemedText type="defaultSemiBold" style={styles.logoutText}>
-                    Выйти из аккаунта
-                </ThemedText>
-            </TouchableOpacity>
 
             {loading ? (
                 <ActivityIndicator size="large" style={styles.loader} />

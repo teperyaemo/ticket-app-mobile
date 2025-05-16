@@ -11,7 +11,14 @@ export default function ProtectedLayout() {
     return (
         <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+            <Stack.Screen
+                name="profile/favorites"
+                options={{ title: "Избранное" }}
+            />
+            <Stack.Screen
+                name="profile/tickets-list"
+                options={{ title: "Мои билеты" }}
+            />
         </Stack>
     );
 }
