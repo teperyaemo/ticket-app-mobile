@@ -138,7 +138,6 @@ export default function TabTwoScreen() {
 
             if (!response.ok) throw new Error("Ошибка покупки билета");
 
-            Alert.alert("Успех", "Билет успешно приобретен!");
             loadConcertsWithFavorites();
         } catch (err) {
             Alert.alert("Ошибка", "Не удалось купить билет");
