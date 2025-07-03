@@ -44,7 +44,7 @@ export default function TabTwoScreen() {
             // Параллельная загрузка концертов и избранного
             const [concertsResponse, favoritesResponse] = await Promise.all([
                 fetch(
-                    "https://teperyaemo.ru/api/Concert/paged?page=1&take=25",
+                    "https://teperyaemo.ru/api/Concert/paged?page=1&take=25&name=",
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
@@ -102,7 +102,7 @@ export default function TabTwoScreen() {
         setLoading(true);
         try {
             const response = await fetch(
-                `https://teperyaemo.ru/api/Concert/name/${encodeURIComponent(
+                `https://teperyaemo.ru/api/Concert/paged?page=1&take=25&name=${encodeURIComponent(
                     searchQuery
                 )}`,
                 {
@@ -115,7 +115,9 @@ export default function TabTwoScreen() {
             if (!response.ok) throw new Error("Ошибка поиска");
 
             const data = await response.json();
-            setConcerts(Array.isArray(data) ? data : [data]);
+            const concertsArray = data?.items || data || [];
+
+            setConcerts(concertsArray);
         } catch (err) {
             Alert.alert("Ошибка", "Не удалось выполнить поиск");
             console.error(err);

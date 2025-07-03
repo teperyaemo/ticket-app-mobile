@@ -25,11 +25,14 @@ export default function LoginScreen() {
 
             const data = await response.json();
 
-            if (response.ok && data.token) {
-                await logIn(data.token);
+            if (response.ok && data.isSuccess && data.content?.token) {
+                await logIn(data.content.token);
                 router.replace("/(portected)/(tabs)/home");
             } else {
-                Alert.alert("Error", data.message || "Authentication failed");
+                Alert.alert(
+                    "Error",
+                    data.errorMessage || "Authentication failed"
+                );
             }
         } catch (error) {
             Alert.alert("Error", "Network request failed");

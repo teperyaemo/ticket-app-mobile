@@ -34,8 +34,14 @@ export default function HomeScreen() {
                     }
                 );
 
-                if (!response.ok)
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        logOut();
+                        return;
+                    }
+
                     throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const responseData = await response.json();
 
